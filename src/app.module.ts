@@ -19,11 +19,11 @@ import { LoggerModule } from 'nestjs-pino';
       pinoHttp: {
         autoLogging: true,
         serializers: {
-          req: (req) => ({
+          req: (req: { method?: string; url?: string }) => ({
             method: req.method,
             url: req.url,
           }),
-          res: (res) => ({
+          res: (res: { statusCode?: number }) => ({
             statusCode: res.statusCode,
           }),
         },

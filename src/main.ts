@@ -62,4 +62,8 @@ async function bootstrap() {
 
   Logger.log(`API running on port ${PORT}`);
 }
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  Logger.error(`Failed to start API: ${message}`);
+  process.exit(1);
+});
