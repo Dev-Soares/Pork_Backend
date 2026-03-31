@@ -11,54 +11,55 @@ import { PinoLogger } from 'nestjs-pino';
 const PORT = process.env.PORT || 3000;
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-	app.useGlobalPipes(
-		new ValidationPipe({
-			whitelist: true,
-			forbidNonWhitelisted: true,
-			transform: true,
-		}),
-	);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-	const swaggerConfig = new DocumentBuilder()
-		.setTitle('Fullstack Template API')
-		.setDescription('Fullstack Template API documentation')
-		.setVersion('0.1')
-		.addTag('template')
-		.build();
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Fullstack Template API')
+    .setDescription('Fullstack Template API documentation')
+    .setVersion('0.1')
+    .addTag('template')
+    .build();
 
-	const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
 
-	app.use(
-		'/api-docs',
-		basicAuth({
-			users: {
-				[process.env.SWAGGER_USER as string]: process.env.SWAGGER_PASSWORD as string,
-			},
-			challenge: true,
-		}),
-	);
+  app.use(
+    '/api-docs',
+    basicAuth({
+      users: {
+        [process.env.SWAGGER_USER as string]: process.env
+          .SWAGGER_PASSWORD as string,
+      },
+      challenge: true,
+    }),
+  );
 
-	SwaggerModule.setup('api-docs', app, document);
+  SwaggerModule.setup('api-docs', app, document);
 
-	app.enableCors({
-		origin: process.env.CORS_ORIGIN,
-		methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-		allowedHeaders: 'Content-Type, Accept, Authorization',
-		credentials: true,
-	});
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+    credentials: true,
+  });
 
-	const logger = await app.resolve(PinoLogger);
+  const logger = await app.resolve(PinoLogger);
 
-	app.useGlobalFilters(new AllExceptionsFilter(logger));
+  app.useGlobalFilters(new AllExceptionsFilter(logger));
 
-	app.use(helmet());
+  app.use(helmet());
 
-	app.use(cookieParser());
+  app.use(cookieParser());
 
-	await app.listen(PORT);
+  await app.listen(PORT);
 
-	Logger.log(`API running on port ${PORT}`);
+  Logger.log(`API running on port ${PORT}`);
 }
 bootstrap();

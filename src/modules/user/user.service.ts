@@ -10,29 +10,41 @@ import { Prisma, User } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashService } from '../../common/hash/hash.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { PlanService } from './plan.service';
 
-type UserPublic = Pick<User, 'id' | 'name' | 'email'>;
+type UserPublic = Pick<User, 'id' | 'name' | 'email' | 'salary' | 'economy'>;
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly hashService: HashService,
+    private readonly planService: PlanService,
   ) {}
 
   async create(data: CreateUserDto): Promise<UserPublic> {
     const hashedPassword = await this.hashService.hashPassword(data.password);
+    const economyValue = this.planService.calculateEconomyValue(
+      data.plan,
+      data.salary,
+    );
     try {
       return await this.prisma.user.create({
         data: {
           name: data.name,
           email: data.email,
+          salary: data.salary,
+          plan: data.plan,
           password: hashedPassword,
+          economy: economyValue,
         },
         select: {
           id: true,
           name: true,
           email: true,
+          salary: true,
+          economy: true,
+          plan: true,
         },
       });
     } catch (error) {
@@ -58,7 +70,7 @@ export class UserService {
 
       return user;
     } catch (error) {
-      if (error instanceof UnauthorizedException) throw error
+      if (error instanceof UnauthorizedException) throw error;
       throw new InternalServerErrorException('Erro ao buscar usuário');
     }
   }
@@ -71,6 +83,9 @@ export class UserService {
           id: true,
           name: true,
           email: true,
+          salary: true,
+          economy: true,
+          plan: true,
         },
       });
 
@@ -88,23 +103,44 @@ export class UserService {
   }
 
   async update(id: string, dto: UpdateUserDto): Promise<UserPublic> {
+    let economy: number | undefined;
+
+    if (dto.salary !== undefined || dto.plan !== undefined) {
+      const user = await this.prisma.user.findUnique({ where: { id } });
+      if (!user) throw new NotFoundException('Usuário não encontrado');
+      economy = this.planService.calculateEconomyValue(
+        dto.plan ?? user.plan,
+        dto.salary ?? user.salary,
+      );
+    }
+
+    const data = {
+      name: dto.name,
+      email: dto.email,
+      salary: dto.salary,
+      plan: dto.plan,
+      economy,
+    };
+
     try {
       return await this.prisma.user.update({
         where: { id },
-        data: {
-          ...(dto.name !== undefined && { name: dto.name }),
-          ...(dto.email !== undefined && { email: dto.email }),
-        },
+        data,
         select: {
           id: true,
           name: true,
           email: true,
+          salary: true,
+          plan: true,
+          economy: true,
         },
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') throw new NotFoundException('Usuário não encontrado');
-        if (error.code === 'P2002') throw new ConflictException('E-mail já cadastrado');
+        if (error.code === 'P2025')
+          throw new NotFoundException('Usuário não encontrado');
+        if (error.code === 'P2002')
+          throw new ConflictException('E-mail já cadastrado');
       }
       throw new InternalServerErrorException(
         'Erro ao atualizar informações do Usuário',
@@ -119,10 +155,10 @@ export class UserService {
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') throw new NotFoundException('Usuário não encontrado');
+        if (error.code === 'P2025')
+          throw new NotFoundException('Usuário não encontrado');
       }
       throw new InternalServerErrorException('Erro ao deletar usuário');
     }
   }
 }
-

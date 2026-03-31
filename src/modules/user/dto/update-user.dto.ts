@@ -1,5 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { Plan } from './create-user.dto';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({ example: 'John Doe' })
@@ -12,4 +21,15 @@ export class UpdateUserDto {
   @IsEmail()
   @IsOptional()
   email?: string;
+
+  @ApiPropertyOptional({ example: 5000 })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  salary?: number;
+
+  @ApiPropertyOptional({ enum: Plan, example: Plan.BASICO })
+  @IsEnum(Plan)
+  @IsOptional()
+  plan?: Plan;
 }

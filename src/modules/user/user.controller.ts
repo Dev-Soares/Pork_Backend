@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ValidationPipe,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -32,7 +43,10 @@ export class UserController {
 
   @Patch(':id')
   @UseGuards(AuthGuard, OwnershipGuard)
-  update(@Param('id') id: string, @Body(ValidationPipe) updateUserDto: UpdateUserDto) {
+  update(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateUserDto: UpdateUserDto,
+  ) {
     return this.userService.update(id, updateUserDto);
   }
 
