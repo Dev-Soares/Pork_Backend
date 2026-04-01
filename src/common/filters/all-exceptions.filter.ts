@@ -3,21 +3,20 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
-  HttpStatus
-} from "@nestjs/common";
+  HttpStatus,
+} from '@nestjs/common';
+import type { Request, Response } from 'express';
 
-import { PinoLogger } from "nestjs-pino";
+import { PinoLogger } from 'nestjs-pino';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-
   constructor(private readonly logger: PinoLogger) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
-
     const ctx = host.switchToHttp();
-    const req = ctx.getRequest();
-    const res = ctx.getResponse();
+    const req = ctx.getRequest<Request>();
+    const res = ctx.getResponse<Response>();
 
     const status =
       exception instanceof HttpException
@@ -28,13 +27,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
       err: exception,
       method: req.method,
       url: req.url,
-      statusCode: status
+      statusCode: status,
     });
 
     const message =
       exception instanceof HttpException
         ? exception.message
-        : "Internal server error";
+        : 'Internal server error';
 
     res.status(status).json({
       statusCode: status,
