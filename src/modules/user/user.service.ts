@@ -10,7 +10,6 @@ import { Prisma, User } from '@prisma/client';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashService } from '../../common/hash/hash.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { PlanService } from './plan.service';
 
 type UserPublic = Pick<User, 'id' | 'name' | 'email' | 'salary' | 'economy'>;
 
@@ -19,12 +18,11 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly hashService: HashService,
-    private readonly planService: PlanService,
   ) {}
 
   async create(data: CreateUserDto): Promise<UserPublic> {
     const hashedPassword = await this.hashService.hashPassword(data.password);
-    const economyValue = this.planService.calculateEconomyValue(
+    const economyValue = this.calculateEconomyValue(
       data.plan,
       data.salary,
     );
@@ -160,5 +158,16 @@ export class UserService {
       }
       throw new InternalServerErrorException('Erro ao deletar usuário');
     }
+  }
+
+  calculateEconomyValue(plan: string, salary: number): number {
+    if (plan === 'BASICO') {
+      return salary * 0.1;
+    } else if (plan === 'PADRAO') {
+      return salary * 0.25;
+    } else if (plan === 'AVANCADO') {
+      return salary * 0.4;
+    }
+    return 0;
   }
 }
