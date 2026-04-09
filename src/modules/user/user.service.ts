@@ -106,7 +106,7 @@ export class UserService {
     if (dto.salary !== undefined || dto.plan !== undefined) {
       const user = await this.prisma.user.findUnique({ where: { id } });
       if (!user) throw new NotFoundException('Usuário não encontrado');
-      economy = this.planService.calculateEconomyValue(
+      economy = this.calculateEconomyValue(
         dto.plan ?? user.plan,
         dto.salary ?? user.salary,
       );
