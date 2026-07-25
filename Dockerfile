@@ -2,18 +2,12 @@ FROM node:22-alpine
 
 RUN apk add --no-cache python3 make g++
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@9.15.9
 
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile \
-  --allow-build=@nestjs/core \
-  --allow-build=@prisma/engines \
-  --allow-build=@scarf/scarf \
-  --allow-build=bcrypt \
-  --allow-build=prisma \
-  --allow-build=unrs-resolver
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 RUN pnpm exec prisma generate
